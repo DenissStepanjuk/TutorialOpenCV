@@ -7,20 +7,6 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://D:/5. Library/opencv/build/java/opencv-453.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <NATIVE>
-          <root url="file://D:/5. Library/opencv/build/java/x64" />
-        </NATIVE>
-        <SOURCES>
-          <root url="jar://D:/5. Library/opencv/build/java/opencv-453.jar!/" />
-          <root url="jar://D:/5. Library/opencv/build/java/opencv-453.jar!/" />
-        </SOURCES>
-      </library>
-    </orderEntry>
+    <orderEntry type="library" name="opencv-453" level="project" />
   </component>
 </module>
