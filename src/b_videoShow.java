@@ -20,10 +20,15 @@ public class b_videoShow {
         Mat frame = new Mat();
         MatOfByte buf = new MatOfByte();
         byte [] imageData;
-        ImageIcon ic;
+        ImageIcon ic = new ImageIcon();
+
+
         //Создаём окно для просмотра изображения
         JFrame window = new JFrame("Window:");
         JLabel screen = new JLabel();
+        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        window.setVisible(true);
+
 
 
         while (true) {
@@ -35,13 +40,13 @@ public class b_videoShow {
             //Конвертируем энкодированную матрицу (изображения) в байтовый массив
             imageData = buf.toArray();
 
+            System.out.println(imageData.length);
+
             //Заполняем окно контентом
             ic = new ImageIcon(imageData);
             screen.setIcon(ic);
             window.getContentPane().add(screen);
             window.pack();
-            window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            window.setVisible(true);
 
             //Задержка
             //HighGui.waitKey(2);
