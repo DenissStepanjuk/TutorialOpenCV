@@ -1,10 +1,8 @@
-package Sockets;
+package c_Sockets;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
-import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.videoio.VideoCapture;
 
 import javax.swing.*;
 import java.io.*;

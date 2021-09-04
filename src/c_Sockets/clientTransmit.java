@@ -1,4 +1,4 @@
-package Sockets;
+package c_Sockets;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
@@ -7,10 +7,8 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.videoio.VideoCapture;
 
 import javax.swing.*;
-import java.io.BufferedInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.Socket;
 
 public class clientTransmit {
@@ -38,7 +36,7 @@ public class clientTransmit {
         window.setVisible(true);
 
 
-        Socket socket = new Socket("localhost",1234);
+        Socket socket = new Socket("192.168.1.131",1234);
         DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
 
         while (true) {

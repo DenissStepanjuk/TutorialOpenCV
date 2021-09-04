@@ -1,3 +1,5 @@
+package a_Image;
+
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
@@ -7,7 +9,7 @@ import org.opencv.imgcodecs.Imgcodecs;
 import javax.swing.*;
 
 
-public class a_imageShow extends JFrame{
+public class imageShow extends JFrame{
     //Загружаем библиотеку OpenCV
     static {System.loadLibrary(Core.NATIVE_LIBRARY_NAME);}
 
@@ -26,7 +28,7 @@ public class a_imageShow extends JFrame{
         JLabel screen = new JLabel();
 
         //Загружаем изображение и храним как объект матрицы
-        img = Imgcodecs.imread("C:\\Users\\Deniss\\IdeaProjects\\draftTutorialOpenCV\\src\\butterfly.png");
+        img = Imgcodecs.imread("C:\\Users\\Deniss\\Documents\\GitHub\\draftTutorialOpenCV\\src\\a_Image\\butterfly.png");
 
         //Энкодируем изображение
         Imgcodecs.imencode(".png", img, buf);

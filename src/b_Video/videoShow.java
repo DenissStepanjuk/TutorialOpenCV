@@ -1,3 +1,5 @@
+package b_Video;
+
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
@@ -7,7 +9,7 @@ import org.opencv.videoio.VideoCapture;
 
 import javax.swing.*;
 
-public class b_videoShow {
+public class videoShow {
     //Загружаем библиотеку OpenCV
     static {System.loadLibrary(Core.NATIVE_LIBRARY_NAME);}
 
