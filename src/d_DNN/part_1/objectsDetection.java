@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.utils.Converters;
 import org.opencv.imgproc.Imgproc;
 
@@ -53,11 +54,11 @@ public class objectsDetection {
         int height = 0;
         int width = 0;
 
-        String path = "C:\\Users\\Deniss\\IdeaProjects\\draftTutorialOpenCV\\src\\d_DNN\\yolo-coco-data\\coco.names";
+        String path = "C:\\Users\\Deniss\\Documents\\GitHub\\draftTutorialOpenCV\\src\\d_DNN\\yolo-coco-data\\coco.names";
         List<String> names = labels(path);
 
-        String cfgPath = "C:\\Users\\Deniss\\IdeaProjects\\draftTutorialOpenCV\\src\\d_DNN\\yolo-coco-data\\yolov4.cfg";
-        String weightsPath = "C:\\Users\\Deniss\\IdeaProjects\\draftTutorialOpenCV\\src\\d_DNN\\yolo-coco-data\\yolov4.weights";
+        String cfgPath = "C:\\Users\\Deniss\\Documents\\GitHub\\draftTutorialOpenCV\\src\\d_DNN\\yolo-coco-data\\yolov4.cfg";
+        String weightsPath = "C:\\Users\\Deniss\\Documents\\GitHub\\draftTutorialOpenCV\\src\\d_DNN\\yolo-coco-data\\yolov4.weights";
         Net network = Dnn.readNetFromDarknet(cfgPath, weightsPath);
 
         List<String> layers_names_all = network.getLayerNames();
@@ -105,8 +106,8 @@ public class objectsDetection {
             for (int i = 0; i < Unconnected.toList().size(); i++){
                 /*System.out.println(output_from_network.get(i));
                 System.out.println(output_from_network.get(i).size().height);
-                System.out.println((output_from_network.get(i).get(2,5))[0]);*/
-                System.out.println("Output layer " + i + "---------------");
+                System.out.println((output_from_network.get(i).get(2,5))[0]);
+                System.out.println("Output layer " + i + "---------------");*/
 
                 // Going through all detections from current output layer
                 // Проходим через все строки содержащие вероятность для каждого класса на даноом слое
@@ -177,18 +178,18 @@ public class objectsDetection {
             bounding_boxes.fromList(bounding_boxes_list);
             confidences.fromList(confidencesList);
             MatOfInt indices = new MatOfInt();
-            System.out.println(bounding_boxes.toList());
+            /*System.out.println(bounding_boxes.toList());
             System.out.println(bounding_boxes.toList().get(1));
             System.out.println(bounding_boxes.toList().get(1).x);
             System.out.println(bounding_boxes.toList().get(1).y);
             System.out.println(bounding_boxes.toList().get(1).height);
-            System.out.println(bounding_boxes.toList().get(1).width);
+            System.out.println(bounding_boxes.toList().get(1).width);*/
 
             Dnn.NMSBoxes(bounding_boxes, confidences,probability_minimum, threshold, indices);
-            //bounding_boxes, confidences, probability_minimum, threshold
+            /*//bounding_boxes, confidences, probability_minimum, threshold
             System.out.println("indices after NMS: " + indices);
             System.out.println("indices to List size: " + indices.toList().size());
-            System.out.println("indices to List: " + indices.toList());
+            System.out.println("indices to List: " + indices.toList());*/
 
             // Если non-maximum suppression выявила ограничительные рамки
             if (indices.toList().size() > 0) {
@@ -208,16 +209,38 @@ public class objectsDetection {
                     //Converters.v
                     Scalar color = new Scalar(255,255,0);
 
+
                     Imgproc.rectangle(frame, rect , color);
 
 
-                    System.out.println(ANSI_PURPLE+x_min+"/"+y_min+"/"+"/"+box_width+"/"+box_height+ANSI_RESET+classNumber);
+                    String Text = names.get(classNumber)+" | "+Float.toString(confidences.toList().get(i));
+                    Scalar color2 = new Scalar(5,255,0);
+                    double [] setXY  = {x_min, y_min+10};
+                    Point org = new Point();
+                    org.set(setXY);
+                    Imgproc.putText(frame, Text, org, 1,1.0, color2);
+
+
+                    /*System.out.println(ANSI_PURPLE+x_min+"/"+y_min+"/"+"/"+box_width+"/"+box_height+ANSI_RESET+classNumber);*/
 
                 }
 
             }
 
 
+            //Энкодируем изображение
+            Imgcodecs.imencode(".png", frame, buf);
+
+            //Конвертируем энкодированную матрицу (изображения) в байтовый массив
+            imageData = buf.toArray();
+
+            //System.out.println(imageData.length);
+
+            //Заполняем окно контентом
+            ic = new ImageIcon(imageData);
+            screen.setIcon(ic);
+            window.getContentPane().add(screen);
+            window.pack();
 
         }
 
