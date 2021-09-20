@@ -24,232 +24,200 @@ import javax.swing.*;
 
 
 public class objectsDetection {
-
-    public static final String ANSI_RESET = "\u001B[0m";
-    public static final String ANSI_BLACK = "\u001B[30m";
-    public static final String ANSI_RED = "\u001B[31m";
-    public static final String ANSI_GREEN = "\u001B[32m";
-    public static final String ANSI_YELLOW = "\u001B[33m";
-    public static final String ANSI_BLUE = "\u001B[34m";
-    public static final String ANSI_PURPLE = "\u001B[35m";
-    public static final String ANSI_CYAN = "\u001B[36m";
-    public static final String ANSI_WHITE = "\u001B[37m";
-
-    static {System.loadLibrary(Core.NATIVE_LIBRARY_NAME);}
+    // Загружаем библиотеку OpenCV, а так же проеверяем версию библиотеки.
+    static {System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+            System.out.println("Version: " + Core.VERSION);}
 
     public static void main(String[] args) {
-
-        VideoCapture cap = new VideoCapture(0);
-        Mat frame = new Mat();
-        MatOfByte buf = new MatOfByte();
-        byte [] imageData;
-        ImageIcon ic = new ImageIcon();
-
-        //Создаём окно для просмотра изображения
+        // Создаём окно для просмотра изображения.
         JFrame window = new JFrame("Window:");
+        // Создаём контейнер для изображения.
         JLabel screen = new JLabel();
+        // Установлимаем операцию закрытия по умолчанию.
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        // Делаем окно отображения контента видимым.
         window.setVisible(true);
 
-        int height = 0;
-        int width = 0;
+        /* Инициализируем видеопоток. Класс VideoCapture предназначен для захвата кадра
+           из видео или видеопотока. */
+        VideoCapture cap = new VideoCapture(0);
 
+        // Инициализируем переменные.
+        Mat frame = new Mat();
+        Mat frameResized = new Mat();
+        MatOfByte buf = new MatOfByte();
+        float minProbability = 0.5f;
+        float threshold = 0.3f;
+        int height;
+        int width;
+        ImageIcon ic;
+
+        /* Из файла coco.names извлекаем наименования всех классов
+           и храним их в списке. */
         String path = "src/d_DNN/yolo-coco-data/coco.names";
-        List<String> names = labels(path);
+        List<String> labels = labels(path);
 
+        // Инициализируем свёрточную нейронную сеть.
         String cfgPath = "src/d_DNN/yolo-coco-data/yolov4.cfg";
         String weightsPath = "src/d_DNN/yolo-coco-data/yolov4.weights";
         Net network = Dnn.readNetFromDarknet(cfgPath, weightsPath);
 
-        List<String> layers_names_all = network.getLayerNames();
+        // Извлекаем наименования всех слоёв нейронной сети.
+        List<String> namesOfAllLayers = network.getLayerNames();
 
-        MatOfInt Unconnected = network.getUnconnectedOutLayers();
+        // Извлекаем индексы выходных слоёв.
+        MatOfInt outputLayersIndexes = network.getUnconnectedOutLayers();
 
-        List<String> layers_names_output = new ArrayList();
-        for (int i = 0; i < Unconnected.toList().size(); i++){
-            layers_names_output.add(layers_names_all.get(Unconnected.toList().get(i)-1));
+        // В цикле извлекаем наименования выходных слоёв из namesOfAllLayers.
+        List<String> outputLayersNames = new ArrayList();
+        for (int i = 0; i < outputLayersIndexes.toList().size(); i++){
+            outputLayersNames.add(namesOfAllLayers.get(outputLayersIndexes.toList().get(i)-1));
         }
-        //System.out.println(layers_names_output);
 
-        float probability_minimum = 0.5f;
-        float threshold = 0.3f;
-
+        // В бесконечном цикле обрабатываем поступающие кадры из видеопотока.
         while (true) {
+            // Извлекаем кадр из видеопотока.
             cap.read(frame);
+            // Извлекаем высоту и ширину кадра.
+            height = frame.height();
+            width = frame.width();
 
-            height = (height==0)? frame.height() : frame.height();
-            width = (width==0)? frame.width() : frame.width();
+            /* Записываем новое изображени, уменьшаем кадр с целью уменьшить нагрузку
+               на нейронную сеть. Ширина и высота должны быть кратны 32. */
+            Imgproc.resize(frame, frameResized, new Size(128,128));
 
-            // Getting blob from current frame
-            Mat blob = Dnn.blobFromImage(frame, 1 / 255.0);
-            //, new Size(416, 416), null, true, false
+            // Подгатавливаем blob (партию из изображений), который пропустим через нейронную сеть.
+            Mat blob = Dnn.blobFromImage(frameResized, 1 / 255.0);
 
-            // setting blob as input to the network
+            // Подаём blob на вход нейронной сети.
             network.setInput(blob);
 
-            // Implementing forward pass with our blob and only through output layers
-            List<Mat> output_from_network = new ArrayList();
-            for (int i = 0; i < Unconnected.toList().size(); i++){
-                output_from_network.add(network.forward(layers_names_output.get(i)));
+            /* Извлекаем данные с выходных слоёв нейронной сети,
+               храним результаты в списке */
+            List<Mat> outputFromNetwork = new ArrayList();
+            for (int i = 0; i < outputLayersIndexes.toList().size(); i++){
+                outputFromNetwork.add(network.forward(outputLayersNames.get(i)));
             }
 
+            /* Координаты обнаруженных ограничительных рамок будут записыватся в список,
+               а за тем конвертироватся MatOfRect2d. */
+            List <Rect2d> boundingBoxesList = new ArrayList();
+            MatOfRect2d boundingBoxes = new MatOfRect2d();
 
-            MatOfRect2d bounding_boxes = new MatOfRect2d();
-            List <Rect2d> bounding_boxes_list = new ArrayList();
-            MatOfFloat confidences = new MatOfFloat();
+            /* Предсказаные вероятности будут записыватся в список,
+               а за тем конвертироватся MatOfFloat. */
             List <Float> confidencesList = new ArrayList();
-            List <Integer> class_numbers = new ArrayList();
+            MatOfFloat confidences = new MatOfFloat();
 
+            // Индексы предсказаных классов будут записыватся в список.
+            List <Integer> classIndexes = new ArrayList();
 
-            // Going through all output layers after feed forward pass
-            // Проходим через все выходные слои
-            for (int i = 0; i < Unconnected.toList().size(); i++){
-                /*System.out.println(output_from_network.get(i));
-                System.out.println(output_from_network.get(i).size().height);
-                System.out.println((output_from_network.get(i).get(2,5))[0]);
-                System.out.println("Output layer " + i + "---------------");*/
-
-                // Going through all detections from current output layer
-                // Проходим через все строки содержащие вероятность для каждого класса на даноом слое
-                for (int b = 0; b < output_from_network.get(i).size().height; b++) {
-
-                    // Записываем в список вероятность для каждого класса из слоя
+            // Проходим через все предсказания из выходных слоёв по очереди.
+            // В цикле проходим через слои:
+            for (int i = 0; i < outputLayersIndexes.toList().size(); i++){
+                // Проходим через все предсказания из слояЖ
+                for (int b = 0; b < outputFromNetwork.get(i).size().height; b++) {
+                    // Записываем в список вероятность для каждого класса из слоя.
                     List <Double> scores = new ArrayList();
-                    for (int c = 5; c < output_from_network.get(i).size().width; c++) {
-                        scores.add(output_from_network.get(i).get(b,c)[0]);
+                    for (int c = 5; c < outputFromNetwork.get(i).size().width; c++) {
+                        scores.add(outputFromNetwork.get(i).get(b,c)[0]);
                     }
-                    //System.out.println("scores row: " + b);
-                    //System.out.println(scores+"\n\n\n\n\n");
 
-                    // Получаем индекс класса с максимальным значением в строке, в которой находимся
+                    // Получаем индекс класса с максимальным значением в строке в которой находимся.
                     int indexOfMaxValue = 0;
                     for (int c = 0; c < scores.toArray().length; c++) {
                         indexOfMaxValue = (scores.get(c) > scores.get(indexOfMaxValue)) ? c : indexOfMaxValue;
                     }
-                    /*if (scores.get(indexOfMaxValue)>0){
-                        System.out.println(ANSI_GREEN+"Maximum score: "+scores.get(indexOfMaxValue)+"/"+indexOfMaxValue+ANSI_RESET);
-                    }*/
 
-                    // Максимальное значение вероятности в строке
+                    // Максимальное значение вероятности в строке.
                     Double maxProbability = scores.get(indexOfMaxValue);
 
+                    // Если вероятность больше заданого минимума,
+                    if (maxProbability > minProbability) {
+                        /* то извлекаем значения точек ограничительной рамки из слоя, расчитываем нужные значения,
+                           получаем ширину, высоту, начальные координаты по "x" и "y",
+                           заносим значения в объект типа Rect2d. */
 
-                    // Если вероятность больше заданого минимума
-                    if (maxProbability > probability_minimum) {
-                        // Извлекаем значения точек ограничительной рамки из слоя
-                        // и записываем в массив
-                        Double [] box_current = new Double[4];
-                        for (int c = 0; c < 4; c++) {
-                            if (c == 0 || c == 2) {
-                                box_current[c] = output_from_network.get(i).get(b, c)[0] * width;
-                            }
-                            else {
-                                box_current[c] = output_from_network.get(i).get(b, c)[0] * height;
-                            }
-                        }
+                        double boxWidth = outputFromNetwork.get(i).get(b, 2)[0] * width;
+                        double boxHeight = outputFromNetwork.get(i).get(b, 3)[0] * width;
+                        Rect2d boxRect2d = new Rect2d(
+                                (outputFromNetwork.get(i).get(b, 0)[0] * width)-(boxWidth/2),
+                                (outputFromNetwork.get(i).get(b, 1)[0] * width)-(boxHeight/2),
+                                boxWidth,
+                                boxHeight
+                        );
 
-
-                        // Конвертиуем значения точек ограничительной рамки (требуемый тип данных int)
-                        // Получаем ширину, высоту, начальные координаты по "x" и "y"
-                        int box_width = (int) Math.round(box_current[2]);
-                        int box_height = (int) Math.round(box_current[3]);;
-                        int x_min = (int) Math.round(box_current[0])-(box_width/2);
-                        int y_min = (int) Math.round(box_current[1])-(box_height/2);
-
-                        // Записываем точки
-                        double [] boxDouble = {x_min, y_min, box_width, box_height};
-                        Rect2d boxRect2d = new Rect2d();
-                        boxRect2d.set(boxDouble);
-
-                        bounding_boxes_list.add(boxRect2d);
+                        // Записываем параметры ограничительной рамки в список.
+                        boundingBoxesList.add(boxRect2d);
+                        // Записываем максимальную вероятность в спсок.
                         confidencesList.add(maxProbability.floatValue());
-                        class_numbers.add(indexOfMaxValue);
-
-
+                        // Записываем индекс предполагаемого класса в список.
+                        classIndexes.add(indexOfMaxValue);
                     }
-
-
                 }
             }
 
-
-
-
-            bounding_boxes.fromList(bounding_boxes_list);
+            // Конвертируем списки в соответсвутующие матрицы.
+            boundingBoxes.fromList(boundingBoxesList);
             confidences.fromList(confidencesList);
+
+            // Инициализируем матрицу, для NMSBoxes
             MatOfInt indices = new MatOfInt();
-            /*System.out.println(bounding_boxes.toList());
-            System.out.println(bounding_boxes.toList().get(1));
-            System.out.println(bounding_boxes.toList().get(1).x);
-            System.out.println(bounding_boxes.toList().get(1).y);
-            System.out.println(bounding_boxes.toList().get(1).height);
-            System.out.println(bounding_boxes.toList().get(1).width);*/
-
-            Dnn.NMSBoxes(bounding_boxes, confidences,probability_minimum, threshold, indices);
-            /*//bounding_boxes, confidences, probability_minimum, threshold
-            System.out.println("indices after NMS: " + indices);
-            System.out.println("indices to List size: " + indices.toList().size());
-            System.out.println("indices to List: " + indices.toList());*/
 
 
+            Dnn.NMSBoxes(boundingBoxes, confidences, minProbability, threshold, indices);
 
-            // Если non-maximum suppression выявила ограничительные рамки
+
+            // Если алгоритм "non-maximum suppression" выявил ограничительные рамки,
             if (indices.size().height > 0) {
-                // то нанесём выявленные рамки на изображения
+                // то наносим выявленные рамки на изображения.
                 for (int i =0; i < indices.toList().size(); i++) {
+                    /* Создаём объект класса Rect на основе которого
+                       будет нанесена ограничительная рамка */
+                    Rect rect = new Rect(
+                            (int) boundingBoxes.toList().get( indices.toList().get(i) ).x,
+                            (int) boundingBoxes.toList().get( indices.toList().get(i) ).y,
+                            (int) boundingBoxes.toList().get( indices.toList().get(i) ).width,
+                            (int) boundingBoxes.toList().get( indices.toList().get(i) ).height
+                    );
 
-                    double x_min =  bounding_boxes.toList().get(indices.toList().get(i)).x;
-                    double y_min =  bounding_boxes.toList().get(indices.toList().get(i)).y;
-                    double box_width = (int) bounding_boxes.toList().get(indices.toList().get(i)).width;
-                    double box_height = (int) bounding_boxes.toList().get(indices.toList().get(i)).height;
-
-                    int classNumber = (int) class_numbers.get(indices.toList().get(i));
-
-                    double [] setValue  = {x_min, y_min, box_width, box_height};
-                    Rect rect = new Rect();
-                    rect.set(setValue);
-                    //Converters.v
+                    // Инициализируем цвет для ограничительной рамки.
                     Scalar color = new Scalar(255,255,0);
-
-
+                    // Наносим ограничительную рамку.
                     Imgproc.rectangle(frame, rect , color);
 
-
-                    String Text = names.get(classNumber)+" | "+Float.toString(confidences.toList().get(i));
-                    Scalar color2 = new Scalar(5,255,0);
-                    double [] setXY  = {x_min, y_min+10};
-                    Point org = new Point();
-                    org.set(setXY);
-                    Imgproc.putText(frame, Text, org, 1,1.0, color2);
-
-
-                    /*System.out.println(ANSI_PURPLE+x_min+"/"+y_min+"/"+"/"+box_width+"/"+box_height+ANSI_RESET+classNumber);*/
+                    // Извлекаем индекс выявлнгого класса (объекта на изображении).
+                    int classIndex = classIndexes.get(indices.toList().get(i));
+                    // Форматируем строку для нанесения на изображение:
+                    // Выявленный клас: вероятность
+                    String Text = labels.get(classIndex)+": "+Float.toString(confidences.toList().get(i));
+                    // Инициализируем точку для нанесения текста.
+                    Point textPoint = new Point(
+                            (int) boundingBoxes.toList().get(indices.toList().get(i)).x,
+                            (int) boundingBoxes.toList().get(indices.toList().get(i)).y-10
+                    );
+                    // Наносим текст на изображение.
+                    Imgproc.putText(frame, Text, textPoint, 1,1.0, color);
 
                 }
-
             }
 
-
-            //Энкодируем изображение
+            /* Преобразуем изображение в матрицу байтов с целью
+               получить массив байтов (пикселей). */
             Imgcodecs.imencode(".png", frame, buf);
 
-            //Конвертируем энкодированную матрицу (изображения) в байтовый массив
-            imageData = buf.toArray();
+            /* Преобразуем массив пикселей в ImageIcon,
+               изображение которое будет отображатся. */
+            ic = new ImageIcon(buf.toArray());
 
-            //System.out.println(imageData.length);
-
-            //Заполняем окно контентом
-            ic = new ImageIcon(imageData);
+            // Привязываем изображение к контейнеру.
             screen.setIcon(ic);
+            // Привязываем контейнер к окну отображения.
             window.getContentPane().add(screen);
             window.pack();
 
         }
-
     }
-
-
-
 
 
     public static List<String> labels(String path) {

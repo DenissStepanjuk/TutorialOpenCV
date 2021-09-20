@@ -17,6 +17,10 @@ public class imageShow extends JFrame{
         JFrame window = new JFrame("Window:");
         // Создаём контейнер для изображения.
         JLabel screen = new JLabel();
+        // Установлимаем операцию закрытия по умолчанию.
+        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        // Делаем окно отображения контента видимым.
+        window.setVisible(true);
 
         // Загружаем изображение, храним его как объект матрицы.
         Mat img = Imgcodecs.imread("src\\a_Image\\butterfly.png");
@@ -35,19 +39,6 @@ public class imageShow extends JFrame{
         // Привязываем контейнер к окну отображения.
         window.getContentPane().add(screen);
         window.pack();
-        // Установлимаем операцию закрытия по умолчанию.
-        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        // Делаем окно отображения контента видимым.
-        window.setVisible(true);
-
-
-
-        /*
-        Mat imgErode =  new Mat(img.size(), img.type());
-        System.out.println(img.size());
-        Mat kernel = new Mat (5,5, CvType.CV_8UC1, new Scalar(1.0));
-        Imgproc.dilate(img, imgErode, kernel);
-        */
 
         }
 
