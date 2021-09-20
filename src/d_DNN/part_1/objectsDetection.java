@@ -54,11 +54,11 @@ public class objectsDetection {
         int height = 0;
         int width = 0;
 
-        String path = "C:\\Users\\Deniss\\Documents\\GitHub\\draftTutorialOpenCV\\src\\d_DNN\\yolo-coco-data\\coco.names";
+        String path = "src/d_DNN/yolo-coco-data/coco.names";
         List<String> names = labels(path);
 
-        String cfgPath = "C:\\Users\\Deniss\\Documents\\GitHub\\draftTutorialOpenCV\\src\\d_DNN\\yolo-coco-data\\yolov4.cfg";
-        String weightsPath = "C:\\Users\\Deniss\\Documents\\GitHub\\draftTutorialOpenCV\\src\\d_DNN\\yolo-coco-data\\yolov4.weights";
+        String cfgPath = "src/d_DNN/yolo-coco-data/yolov4.cfg";
+        String weightsPath = "src/d_DNN/yolo-coco-data/yolov4.weights";
         Net network = Dnn.readNetFromDarknet(cfgPath, weightsPath);
 
         List<String> layers_names_all = network.getLayerNames();
@@ -191,8 +191,10 @@ public class objectsDetection {
             System.out.println("indices to List size: " + indices.toList().size());
             System.out.println("indices to List: " + indices.toList());*/
 
+
+
             // Если non-maximum suppression выявила ограничительные рамки
-            if (indices.toList().size() > 0) {
+            if (indices.size().height > 0) {
                 // то нанесём выявленные рамки на изображения
                 for (int i =0; i < indices.toList().size(); i++) {
 

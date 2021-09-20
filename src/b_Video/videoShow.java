@@ -3,9 +3,12 @@ package b_Video;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
+import org.opencv.core.Size;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.videoio.VideoCapture;
+import org.opencv.videoio.VideoWriter;
+import org.opencv.videoio.Videoio;
 
 import javax.swing.*;
 
@@ -32,9 +35,21 @@ public class videoShow {
         window.setVisible(true);
 
 
+        cap.set(3, 640);
+        cap.set(4, 480);
+
+        VideoWriter writer = new VideoWriter("src/b_Video/savedVideo.mpeg", VideoWriter.fourcc('m','j','p','g'),30.0, new Size(640, 480));
+        System.out.println(VideoWriter.fourcc('m','j','p','g'));
+
+
+
+
 
         while (true) {
+
             cap.read(frame);
+
+            writer.write(frame);
 
             //Энкодируем изображение
             Imgcodecs.imencode(".png", frame, buf);
@@ -42,7 +57,7 @@ public class videoShow {
             //Конвертируем энкодированную матрицу (изображения) в байтовый массив
             imageData = buf.toArray();
 
-            System.out.println(imageData.length);
+            //System.out.println(frame.size());
 
             //Заполняем окно контентом
             ic = new ImageIcon(imageData);
@@ -50,8 +65,8 @@ public class videoShow {
             window.getContentPane().add(screen);
             window.pack();
 
-            //Задержка
-            //HighGui.waitKey(2);
         }
+
+
     }
 }

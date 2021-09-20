@@ -1,0 +1,7 @@
+
+src/d_DNN/yolo-coco-data/yolov4.cfg
+src/d_DNN/yolo-coco-data/yolov4.weights
+out/production/draftTutorialOpenCV/d_DNN/yolo-coco-data/yolov4.weights
+out/production/draftTutorialOpenCV/d_DNN/yolo-coco-data/yolov4.cfg
+out/production/draftTutorialOpenCV/d_DNN/yolo-coco-data/yolov3.weights
+out/production/draftTutorialOpenCV/d_DNN/yolo-coco-data/yolov3.cfg
