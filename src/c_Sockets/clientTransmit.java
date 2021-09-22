@@ -38,7 +38,7 @@ public class clientTransmit {
         ImageIcon ic;
 
         // Создаём сокет, точку соединения между двумя компьютерами.
-        Socket socket = new Socket("localhost",1234);
+        Socket socket = new Socket("192.168.1.159",1234);
         /* Создаём объект DataOutputStream который связываем с нашим сокетом.
            Данный объект позволяет отправлять примитивные типы данных. */
         DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());

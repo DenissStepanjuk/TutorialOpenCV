@@ -1,4 +1,4 @@
-package d_DNN.part_1;
+package d_DNN;
 
 import org.opencv.core.*;
 
