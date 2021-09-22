@@ -28,7 +28,7 @@ public class videoShow {
 
         /* Инициализируем видеопоток. Класс VideoCapture предназначен для захвата кадра
            из видео или видеопотока. */
-        VideoCapture cap = new VideoCapture(0);
+        VideoCapture cap = new VideoCapture("src/b_Video/testVideo.mp4");
 
         /* Инициализируем объект для записи видео. Класс VideoWriter предназначен для
            записи видео файлов. */
@@ -42,7 +42,6 @@ public class videoShow {
 
         // До тех пор пока поступает кадр из видеопотока выполняем следующие действия:
         while (cap.grab()) {
-
             // Извлекаем кадр из видеопотока.
             cap.read(frame);
 
@@ -61,8 +60,8 @@ public class videoShow {
             //
             Imgproc.putText(frame, "SDBproduction", new Point(150,50),
                     4, 1.5, new Scalar(5, 5, 5));
-            ///////
 
+            ///////
 
 
 
@@ -80,9 +79,8 @@ public class videoShow {
             // Привязываем изображение к контейнеру.
             screen.setIcon(ic);
             // Привязываем контейнер к окну отображения.
-            window.getContentPane().add(screen);
+            window.setContentPane(screen);
             window.pack();
-
         }
 
         // Закрываем все незавершённые процессы.
