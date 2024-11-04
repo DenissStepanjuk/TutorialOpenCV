@@ -1,5 +1,7 @@
 JavaTutorialOpenCV
 
+https://habr.com/ru/articles/585322/
+
 Java: OpenCV [Обработка изображения]
 https://www.youtube.com/watch?v=-pLF1rn35O4
 
